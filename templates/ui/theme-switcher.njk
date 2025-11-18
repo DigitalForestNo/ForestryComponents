@@ -1,0 +1,214 @@
+---
+title: "Theme Switcher"
+description: "A simple theme toggle button that cycles between light, dark, and auto modes"
+version: "1.0.0"
+author: "Forestry.md"
+category: "UI"
+defaultSlot: "header"
+variables:
+  defaultTheme:
+    type: select
+    default: "auto"
+    title: "Default Theme"
+    description: "Initial theme when user first visits"
+    options:
+      - "auto"
+      - "light"
+      - "dark"
+  fixedPosition:
+    type: boolean
+    default: false
+    title: "Fixed Position"
+    description: "Stick the button to the bottom-right corner of the screen"
+  iconSize:
+    type: string
+    default: "1.25rem"
+    title: "Icon Size"
+    description: "Size of the theme icon"
+  buttonSize:
+    type: string
+    default: "2.5rem"
+    title: "Button Size"
+    description: "Size of the button"
+  showBackground:
+    type: boolean
+    default: false
+    title: "Show Background"
+    description: "Display a background behind the button (recommended for fixed position)"
+  backgroundColor:
+    type: color
+    default: "#ffffff"
+    title: "Background Color"
+    description: "Background color of the button"
+  backgroundColorDark:
+    type: color
+    default: "#1e1e1e"
+    title: "Background Color (Dark)"
+    description: "Background color in dark mode"
+  iconColor:
+    type: color
+    default: "#333333"
+    title: "Icon Color"
+    description: "Color of the icon"
+  iconColorDark:
+    type: color
+    default: "#e0e0e0"
+    title: "Icon Color (Dark)"
+    description: "Icon color in dark mode"
+---
+
+<button class="theme-switcher {% if fixedPosition %}theme-switcher-fixed{% endif %} {% if showBackground %}theme-switcher-bg{% endif %}" type="button" title="Toggle theme" aria-label="Toggle theme">
+    <svg class="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <svg class="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+    <svg class="theme-icon-auto" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        <path d="M19 3v4"></path>
+        <path d="M21 5h-4"></path>
+    </svg>
+</button>
+
+<style>
+.theme-switcher {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: {{ buttonSize }};
+    height: {{ buttonSize }};
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: {{ iconColor }};
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.theme-dark .theme-switcher {
+    color: {{ iconColorDark }};
+}
+
+.theme-switcher:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.theme-dark .theme-switcher:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.theme-switcher-bg {
+    background: {{ backgroundColor }};
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theme-dark .theme-switcher-bg {
+    background: {{ backgroundColorDark }};
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.theme-switcher-fixed {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1000;
+}
+
+.theme-switcher svg {
+    width: {{ iconSize }};
+    height: {{ iconSize }};
+}
+
+/* Icon visibility based on current theme */
+.theme-switcher .theme-icon-sun,
+.theme-switcher .theme-icon-moon,
+.theme-switcher .theme-icon-auto {
+    display: none;
+}
+
+.theme-switcher.light .theme-icon-sun {
+    display: block;
+}
+
+.theme-switcher.dark .theme-icon-moon {
+    display: block;
+}
+
+.theme-switcher.auto .theme-icon-auto {
+    display: block;
+}
+</style>
+
+<script>
+(function() {
+    const defaultTheme = '{{ defaultTheme }}';
+    const btn = document.currentScript.previousElementSibling.previousElementSibling;
+
+    function setThemeIcon(theme) {
+        btn.classList.remove('light', 'dark', 'auto');
+        btn.classList.add(theme);
+    }
+
+    function setTheme(theme, setIcon) {
+        if (setIcon) {
+            setThemeIcon(theme);
+        }
+
+        if (theme === 'dark') {
+            document.body.classList.remove('theme-light');
+            document.body.classList.add('theme-dark');
+        } else if (theme === 'light') {
+            document.body.classList.add('theme-light');
+            document.body.classList.remove('theme-dark');
+        } else {
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (prefersDark) {
+                document.body.classList.remove('theme-light');
+                document.body.classList.add('theme-dark');
+            } else {
+                document.body.classList.add('theme-light');
+                document.body.classList.remove('theme-dark');
+            }
+        }
+    }
+
+    // Initialize theme
+    let theme = window.localStorage.getItem('site-theme') || defaultTheme;
+    setTheme(theme, true);
+    window.siteTheme = theme;
+
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+        const settings = window.localStorage.getItem('site-theme');
+        if (!settings || settings === 'auto') {
+            setTheme('auto', true);
+        }
+    });
+
+    // Click handler
+    btn.addEventListener('click', function() {
+        let newTheme;
+        if (window.siteTheme === 'auto') {
+            newTheme = 'dark';
+        } else if (window.siteTheme === 'dark') {
+            newTheme = 'light';
+        } else {
+            newTheme = 'auto';
+        }
+
+        setTheme(newTheme, true);
+        window.localStorage.setItem('site-theme', newTheme);
+        window.siteTheme = newTheme;
+    });
+})();
+</script>
