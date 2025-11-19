@@ -61,7 +61,7 @@ variables:
     description: "Icon color in dark mode"
 ---
 
-<button class="theme-switcher theme-switcher-{{ position }} {% if showBackground %}theme-switcher-bg{% endif %}" type="button" title="Toggle theme" aria-label="Toggle theme">
+<button class="theme-switcher theme-switcher-{{ position }} forestry-fixed-ui {% if showBackground %}theme-switcher-bg{% endif %}" type="button" title="Toggle theme" aria-label="Toggle theme" data-fixed-position="{{ position }}" data-button-size="{{ buttonSize }}">
     <svg class="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="5"></circle>
         <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -168,6 +168,29 @@ variables:
 (function() {
     const defaultTheme = '{{ defaultTheme }}';
     const btn = document.currentScript.previousElementSibling.previousElementSibling;
+    const position = '{{ position }}';
+
+    // Auto-stack with other forestry-fixed-ui elements in same position
+    if (position === 'bottom-right' || position === 'top-right') {
+        const siblings = document.querySelectorAll('.forestry-fixed-ui[data-fixed-position="' + position + '"]');
+        let offset = 1; // rem
+
+        for (const sibling of siblings) {
+            if (sibling === btn) break; // Only count elements before this one
+            const siblingSize = sibling.dataset.buttonSize || '2.5rem';
+            // Parse the size value (assumes rem units)
+            const sizeValue = parseFloat(siblingSize) || 2.5;
+            offset += sizeValue + 0.5; // button size + gap
+        }
+
+        if (offset > 1) {
+            if (position === 'bottom-right') {
+                btn.style.bottom = offset + 'rem';
+            } else {
+                btn.style.top = offset + 'rem';
+            }
+        }
+    }
 
     function setThemeIcon(theme) {
         btn.classList.remove('light', 'dark', 'auto');

@@ -128,6 +128,63 @@ variables:
 - Require secret variables, as they will be exposed to the client
 - Include minified/obfuscated code
 
+## Fixed UI Stacking System
+
+When creating fixed-position UI components (like floating action buttons), use the `forestry-fixed-ui` system to automatically stack with other fixed components.
+
+### How to Use
+
+1. Add the `forestry-fixed-ui` class to your button
+2. Add `data-fixed-position` attribute with the position value
+3. Add `data-button-size` attribute with the button size
+4. Include the stacking JavaScript in your component
+
+### Example Implementation
+
+```njk
+<button class="my-button my-button-{{ position }} forestry-fixed-ui"
+        data-fixed-position="{{ position }}"
+        data-button-size="{{ buttonSize }}">
+    <!-- button content -->
+</button>
+
+<script>
+(function() {
+    const btn = document.currentScript.previousElementSibling.previousElementSibling;
+    const position = '{{ position }}';
+
+    // Auto-stack with other forestry-fixed-ui elements in same position
+    if (position === 'bottom-right' || position === 'top-right') {
+        const siblings = document.querySelectorAll('.forestry-fixed-ui[data-fixed-position="' + position + '"]');
+        let offset = 1; // rem
+
+        for (const sibling of siblings) {
+            if (sibling === btn) break;
+            const siblingSize = sibling.dataset.buttonSize || '2.5rem';
+            const sizeValue = parseFloat(siblingSize) || 2.5;
+            offset += sizeValue + 0.5; // button size + gap
+        }
+
+        if (offset > 1) {
+            if (position === 'bottom-right') {
+                btn.style.bottom = offset + 'rem';
+            } else {
+                btn.style.top = offset + 'rem';
+            }
+        }
+    }
+})();
+</script>
+```
+
+### How It Works
+
+- Components query for all `.forestry-fixed-ui` elements with the same `data-fixed-position`
+- Each component calculates its offset based on elements that appear before it in the DOM
+- Stacking order is determined by DOM order (first component is at base position, subsequent ones stack above)
+
+This allows multiple fixed-position components to coexist without overlapping, and new components can be added without modifying existing ones.
+
 ## Template Example
 
 Here's a complete example:

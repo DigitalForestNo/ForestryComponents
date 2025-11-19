@@ -1,0 +1,189 @@
+---
+title: "Random Note"
+description: "A button that navigates to a random note from your site. Requires search to be enabled."
+version: "1.0.0"
+author: "Forestry.md"
+category: "UI"
+defaultSlot: "header"
+variables:
+  position:
+    type: select
+    default: "inline"
+    title: "Position"
+    description: "Fixed position on screen, or inline. Will automatically stack with theme-switcher if both use the same fixed position."
+    options:
+      - "inline"
+      - "bottom-right"
+      - "top-right"
+  iconSize:
+    type: string
+    default: "1.25rem"
+    title: "Icon Size"
+    description: "Size of the dice icon"
+  buttonSize:
+    type: string
+    default: "2.5rem"
+    title: "Button Size"
+    description: "Size of the button"
+  showBackground:
+    type: boolean
+    default: false
+    title: "Show Background"
+    description: "Display a background behind the button (recommended for fixed positions)"
+  backgroundColor:
+    type: color
+    default: "#ffffff"
+    title: "Background Color"
+    description: "Background color of the button"
+  backgroundColorDark:
+    type: color
+    default: "#1e1e1e"
+    title: "Background Color (Dark)"
+    description: "Background color in dark mode"
+  iconColor:
+    type: color
+    default: "#333333"
+    title: "Icon Color"
+    description: "Color of the icon"
+  iconColorDark:
+    type: color
+    default: "#e0e0e0"
+    title: "Icon Color (Dark)"
+    description: "Icon color in dark mode"
+---
+
+<button class="random-note random-note-{{ position }} forestry-fixed-ui {% if showBackground %}random-note-bg{% endif %}" type="button" title="Go to random note" aria-label="Go to random note" data-fixed-position="{{ position }}" data-button-size="{{ buttonSize }}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect>
+        <circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"></circle>
+        <circle cx="16" cy="8" r="1.5" fill="currentColor" stroke="none"></circle>
+        <circle cx="8" cy="16" r="1.5" fill="currentColor" stroke="none"></circle>
+        <circle cx="16" cy="16" r="1.5" fill="currentColor" stroke="none"></circle>
+        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
+    </svg>
+</button>
+
+<style>
+.random-note {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: {{ buttonSize }};
+    height: {{ buttonSize }};
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: {{ iconColor }};
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.theme-dark .random-note {
+    color: {{ iconColorDark }};
+}
+
+.random-note:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.theme-dark .random-note:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.random-note-bg {
+    background: {{ backgroundColor }};
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theme-dark .random-note-bg {
+    background: {{ backgroundColorDark }};
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.random-note-inline {
+    /* Inline positioning, no special styles */
+}
+
+.random-note-bottom-right {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 1000;
+}
+
+.random-note-top-right {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+}
+
+.random-note svg {
+    width: {{ iconSize }};
+    height: {{ iconSize }};
+}
+</style>
+
+<script>
+(function() {
+    const btn = document.currentScript.previousElementSibling.previousElementSibling;
+    const position = '{{ position }}';
+
+    // Auto-stack with other forestry-fixed-ui elements in same position
+    if (position === 'bottom-right' || position === 'top-right') {
+        const siblings = document.querySelectorAll('.forestry-fixed-ui[data-fixed-position="' + position + '"]');
+        let offset = 1; // rem
+
+        for (const sibling of siblings) {
+            if (sibling === btn) break; // Only count elements before this one
+            const siblingSize = sibling.dataset.buttonSize || '2.5rem';
+            // Parse the size value (assumes rem units)
+            const sizeValue = parseFloat(siblingSize) || 2.5;
+            offset += sizeValue + 0.5; // button size + gap
+        }
+
+        if (offset > 1) {
+            if (position === 'bottom-right') {
+                btn.style.bottom = offset + 'rem';
+            } else {
+                btn.style.top = offset + 'rem';
+            }
+        }
+    }
+
+    btn.addEventListener('click', function() {
+        try {
+            const searchIndexRaw = window.localStorage.getItem('searchIndex');
+
+            if (!searchIndexRaw) {
+                console.warn('Random Note: searchIndex not found in localStorage. Make sure search is enabled on your site.');
+                alert('Search index not found. Please enable search on your site for this feature to work.');
+                return;
+            }
+
+            const searchIndex = JSON.parse(searchIndexRaw);
+
+            if (!searchIndex.docs || !Array.isArray(searchIndex.docs) || searchIndex.docs.length === 0) {
+                console.warn('Random Note: No documents found in searchIndex.');
+                alert('No notes found in search index.');
+                return;
+            }
+
+            const docs = searchIndex.docs;
+            const randomIndex = Math.floor(Math.random() * docs.length);
+            const randomDoc = docs[randomIndex];
+
+            if (randomDoc.url) {
+                window.location.href = randomDoc.url;
+            } else {
+                console.warn('Random Note: Selected document has no URL.');
+                alert('Could not find URL for the selected note.');
+            }
+        } catch (e) {
+            console.error('Random Note: Error reading search index', e);
+            alert('Error reading search index. Please check console for details.');
+        }
+    });
+})();
+</script>
