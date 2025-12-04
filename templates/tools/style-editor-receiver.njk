@@ -1,0 +1,62 @@
+---
+title: "Style Editor Receiver"
+description: "Enables live CSS variable editing from the Forestry dashboard. Install this component to use the Style Editor feature."
+version: "1.0.0"
+author: "Forestry.md"
+category: "Tools"
+defaultSlot: "head"
+variables: {}
+---
+
+<script>
+(function() {
+    // Only activate when loaded in an iframe
+    if (window.parent === window) return;
+
+    window.addEventListener('message', function(event) {
+        // Verify origin is from Forestry dashboard
+        const allowedOrigins = ['forestry.md', 'localhost'];
+        const isAllowedOrigin = allowedOrigins.some(function(origin) {
+            return event.origin.includes(origin);
+        });
+        if (!isAllowedOrigin) return;
+
+        var data = event.data;
+        if (!data || !data.type) return;
+
+        if (data.type === 'setCSS') {
+            // Set a single CSS variable
+            document.body.style.setProperty(data.variableName, data.value);
+        } else if (data.type === 'resetCSS') {
+            // Remove a single CSS variable override
+            document.body.style.removeProperty(data.variableName);
+        } else if (data.type === 'bulkSetCSS') {
+            // Apply multiple variables at once
+            if (data.variables && typeof data.variables === 'object') {
+                Object.keys(data.variables).forEach(function(name) {
+                    document.body.style.setProperty(name, data.variables[name]);
+                });
+            }
+        } else if (data.type === 'resetAllCSS') {
+            // Clear all inline style overrides
+            document.body.removeAttribute('style');
+        } else if (data.type === 'getComputedCSS') {
+            // Return computed values for requested variables
+            var computed = {};
+            var styles = getComputedStyle(document.body);
+            if (Array.isArray(data.variableNames)) {
+                data.variableNames.forEach(function(name) {
+                    computed[name] = styles.getPropertyValue(name).trim();
+                });
+            }
+            window.parent.postMessage({
+                type: 'computedCSS',
+                variables: computed
+            }, event.origin);
+        }
+    });
+
+    // Signal that receiver is ready
+    window.parent.postMessage({ type: 'styleEditorReady' }, '*');
+})();
+</script>
