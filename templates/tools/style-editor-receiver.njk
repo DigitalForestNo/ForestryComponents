@@ -1,7 +1,7 @@
 ---
 title: "Style Editor Receiver"
 description: "Enables live CSS variable editing from the Forestry dashboard. Install this component to use the Style Editor feature."
-version: "1.0.0"
+version: "1.1.0"
 author: "Forestry.md"
 category: "Tools"
 defaultSlot: "head"
@@ -14,15 +14,14 @@ variables: {}
     if (window.parent === window) return;
 
     window.addEventListener('message', function(event) {
-        // Verify origin is from Forestry dashboard
-        const allowedOrigins = ['forestry.md', 'localhost'];
-        const isAllowedOrigin = allowedOrigins.some(function(origin) {
-            return event.origin.includes(origin);
-        });
-        if (!isAllowedOrigin) return;
-
         var data = event.data;
         if (!data || !data.type) return;
+
+        // Respond to ping with pong (for connection detection)
+        if (data.type === 'ping') {
+            window.parent.postMessage({ type: 'pong' }, '*');
+            return;
+        }
 
         if (data.type === 'setCSS') {
             // Set a single CSS variable
@@ -56,7 +55,19 @@ variables: {}
         }
     });
 
-    // Signal that receiver is ready
-    window.parent.postMessage({ type: 'styleEditorReady' }, '*');
+    // Send ready message immediately and periodically until parent acknowledges
+    function sendReady() {
+        window.parent.postMessage({ type: 'styleEditorReady' }, '*');
+    }
+    sendReady();
+    var readyInterval = setInterval(sendReady, 1000);
+
+    // Stop sending ready messages once we receive any message from parent
+    window.addEventListener('message', function stopReady(event) {
+        if (event.data && event.data.type) {
+            clearInterval(readyInterval);
+            window.removeEventListener('message', stopReady);
+        }
+    });
 })();
 </script>
