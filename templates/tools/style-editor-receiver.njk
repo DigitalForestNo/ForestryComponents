@@ -1,7 +1,7 @@
 ---
 title: "Style Editor Receiver"
 description: "Enables live CSS variable editing from the Forestry dashboard. Install this component to use the Style Editor feature."
-version: "1.1.0"
+version: "1.2.0"
 author: "Forestry.md"
 category: "Tools"
 defaultSlot: "head"
@@ -12,6 +12,11 @@ variables: {}
 (function() {
     // Only activate when loaded in an iframe
     if (window.parent === window) return;
+
+    // Create a style element for custom CSS injection
+    var customStyleEl = document.createElement('style');
+    customStyleEl.id = 'forestry-custom-css';
+    document.head.appendChild(customStyleEl);
 
     window.addEventListener('message', function(event) {
         var data = event.data;
@@ -39,6 +44,12 @@ variables: {}
         } else if (data.type === 'resetAllCSS') {
             // Clear all inline style overrides
             document.body.removeAttribute('style');
+        } else if (data.type === 'setCustomCSS') {
+            // Inject arbitrary CSS into the custom style element
+            customStyleEl.textContent = data.css || '';
+        } else if (data.type === 'resetCustomCSS') {
+            // Clear custom CSS
+            customStyleEl.textContent = '';
         } else if (data.type === 'getComputedCSS') {
             // Return computed values for requested variables
             var computed = {};
