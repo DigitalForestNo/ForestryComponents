@@ -13,6 +13,8 @@ variables: {}
     // Only activate when loaded in an iframe
     if (window.parent === window) return;
 
+    var RECEIVER_VERSION = '1.2.0';
+
     // Create a style element for custom CSS injection
     var customStyleEl = document.createElement('style');
     customStyleEl.id = 'forestry-custom-css';
@@ -22,9 +24,9 @@ variables: {}
         var data = event.data;
         if (!data || !data.type) return;
 
-        // Respond to ping with pong (for connection detection)
+        // Respond to ping with pong (for connection detection) - include version
         if (data.type === 'ping') {
-            window.parent.postMessage({ type: 'pong' }, '*');
+            window.parent.postMessage({ type: 'pong', version: RECEIVER_VERSION }, '*');
             return;
         }
 
@@ -68,7 +70,7 @@ variables: {}
 
     // Send ready message immediately and periodically until parent acknowledges
     function sendReady() {
-        window.parent.postMessage({ type: 'styleEditorReady' }, '*');
+        window.parent.postMessage({ type: 'styleEditorReady', version: RECEIVER_VERSION }, '*');
     }
     sendReady();
     var readyInterval = setInterval(sendReady, 1000);
